@@ -23,6 +23,11 @@ O contrato inicial foi definido em `/openapi.yaml` com os principais recursos pa
 - Comunicados (`/notices`)
 - Cobranças (`/charges`) e pagamentos (`/payments`)
 
+### Observação sobre validações avançadas no OpenAPI
+
+O contrato usa a extensão customizada `x-validation-rules` para regras temporais que não são expressas de forma nativa no OpenAPI 3.0 (por exemplo `endAt > startAt` e `paidAt <= now()`).  
+Ao implementar a API, essa extensão deve ser interpretada pela camada de validação da aplicação.
+
 ## Próximos passos
 
 1. Implementar os casos de uso com regras de domínio por agregado.
