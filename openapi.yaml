@@ -1,0 +1,419 @@
+openapi: 3.0.3
+info:
+  title: Residencial Greenville API
+  version: 1.0.0
+  description: API para gerenciamento de condomínios, orientada a DDD.
+servers:
+  - url: /v1
+tags:
+  - name: Auth
+  - name: Units
+  - name: Residents
+  - name: Reservations
+  - name: Maintenance
+  - name: Notices
+  - name: Billing
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Autentica usuário e retorna token
+      description: Endpoint sensível com proteção de limitação de tentativas por IP e usuário.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Autenticado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '401':
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Limite de tentativas excedido
+          headers:
+            Retry-After:
+              description: Tempo em segundos para nova tentativa.
+              schema:
+                type: integer
+                minimum: 1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /units:
+    get:
+      tags: [Units]
+      summary: Lista unidades do condomínio
+      responses:
+        '200':
+          description: Lista retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Unit'
+    post:
+      tags: [Units]
+      summary: Cadastra unidade
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUnitRequest'
+      responses:
+        '201':
+          description: Unidade criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unit'
+  /residents:
+    get:
+      tags: [Residents]
+      summary: Lista moradores
+      responses:
+        '200':
+          description: Lista retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Resident'
+    post:
+      tags: [Residents]
+      summary: Cadastra morador
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateResidentRequest'
+      responses:
+        '201':
+          description: Morador criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Resident'
+  /reservations:
+    get:
+      tags: [Reservations]
+      summary: Lista reservas de áreas comuns
+      responses:
+        '200':
+          description: Lista retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reservation'
+    post:
+      tags: [Reservations]
+      summary: Solicita reserva de área comum
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReservationRequest'
+      responses:
+        '201':
+          description: Reserva criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+  /maintenance-tickets:
+    get:
+      tags: [Maintenance]
+      summary: Lista chamados de manutenção
+      responses:
+        '200':
+          description: Lista retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MaintenanceTicket'
+    post:
+      tags: [Maintenance]
+      summary: Abre chamado de manutenção
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMaintenanceTicketRequest'
+      responses:
+        '201':
+          description: Chamado criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MaintenanceTicket'
+  /notices:
+    get:
+      tags: [Notices]
+      summary: Lista comunicados do condomínio
+      responses:
+        '200':
+          description: Lista retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notice'
+    post:
+      tags: [Notices]
+      summary: Publica comunicado
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNoticeRequest'
+      responses:
+        '201':
+          description: Comunicado publicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notice'
+  /charges:
+    get:
+      tags: [Billing]
+      summary: Lista cobranças condominiais
+      responses:
+        '200':
+          description: Lista retornada com sucesso
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Charge'
+    post:
+      tags: [Billing]
+      summary: Cria cobrança condominial
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateChargeRequest'
+      responses:
+        '201':
+          description: Cobrança criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Charge'
+  /payments:
+    post:
+      tags: [Billing]
+      summary: Registra pagamento de cobrança
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterPaymentRequest'
+      responses:
+        '201':
+          description: Pagamento registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password, minLength: 8, maxLength: 128 }
+    AuthToken:
+      type: object
+      required: [accessToken, expiresIn]
+      properties:
+        accessToken: { type: string }
+        expiresIn: { type: integer, minimum: 1 }
+
+    Unit:
+      type: object
+      required: [id, condominiumId, code]
+      properties:
+        id: { type: string, format: uuid }
+        condominiumId: { type: string, format: uuid }
+        code: { type: string, example: "Bloco A - 101" }
+    CreateUnitRequest:
+      type: object
+      required: [condominiumId, code]
+      properties:
+        condominiumId: { type: string, format: uuid }
+        code: { type: string }
+
+    Resident:
+      type: object
+      required: [id, condominiumId, unitId, name, email]
+      properties:
+        id: { type: string, format: uuid }
+        condominiumId: { type: string, format: uuid }
+        unitId: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+    CreateResidentRequest:
+      type: object
+      required: [condominiumId, unitId, name, email]
+      properties:
+        condominiumId: { type: string, format: uuid }
+        unitId: { type: string, format: uuid }
+        name: { type: string }
+        email: { type: string, format: email }
+
+    Reservation:
+      type: object
+      required: [id, condominiumId, residentId, resourceName, startAt, endAt, status]
+      properties:
+        id: { type: string, format: uuid }
+        condominiumId: { type: string, format: uuid }
+        residentId: { type: string, format: uuid }
+        resourceName: { type: string, example: "Salão de festas" }
+        startAt: { type: string, format: date-time }
+        endAt: { type: string, format: date-time }
+        status:
+          type: string
+          enum: [PENDING, APPROVED, REJECTED, CANCELED]
+    CreateReservationRequest:
+      type: object
+      required: [condominiumId, residentId, resourceName, startAt, endAt]
+      description: O backend deve validar que endAt é maior que startAt.
+      x-validation-rules:
+        - rule: endAtAfterStartAt
+          expression: endAt > startAt
+          message: endAt deve ser maior que startAt.
+      properties:
+        condominiumId: { type: string, format: uuid }
+        residentId: { type: string, format: uuid }
+        resourceName: { type: string }
+        startAt: { type: string, format: date-time }
+        endAt: { type: string, format: date-time }
+
+    MaintenanceTicket:
+      type: object
+      required: [id, condominiumId, unitId, title, status]
+      properties:
+        id: { type: string, format: uuid }
+        condominiumId: { type: string, format: uuid }
+        unitId: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+        status:
+          type: string
+          enum: [OPEN, IN_PROGRESS, RESOLVED, CANCELED]
+    CreateMaintenanceTicketRequest:
+      type: object
+      required: [condominiumId, unitId, title]
+      properties:
+        condominiumId: { type: string, format: uuid }
+        unitId: { type: string, format: uuid }
+        title: { type: string }
+        description: { type: string }
+
+    Notice:
+      type: object
+      required: [id, condominiumId, title, publishedAt]
+      properties:
+        id: { type: string, format: uuid }
+        condominiumId: { type: string, format: uuid }
+        title: { type: string }
+        message: { type: string }
+        publishedAt: { type: string, format: date-time }
+    CreateNoticeRequest:
+      type: object
+      required: [condominiumId, title, message]
+      properties:
+        condominiumId: { type: string, format: uuid }
+        title: { type: string }
+        message: { type: string }
+
+    Charge:
+      type: object
+      required: [id, condominiumId, unitId, amount, dueDate, status]
+      properties:
+        id: { type: string, format: uuid }
+        condominiumId: { type: string, format: uuid }
+        unitId: { type: string, format: uuid }
+        amount: { type: number, format: double, minimum: 0.01 }
+        dueDate: { type: string, format: date }
+        status:
+          type: string
+          enum: [OPEN, PAID, OVERDUE, CANCELED]
+    CreateChargeRequest:
+      type: object
+      required: [condominiumId, unitId, amount, dueDate]
+      properties:
+        condominiumId: { type: string, format: uuid }
+        unitId: { type: string, format: uuid }
+        amount: { type: number, format: double, minimum: 0.01 }
+        dueDate: { type: string, format: date }
+
+    RegisterPaymentRequest:
+      type: object
+      required: [chargeId, amount, paidAt, method]
+      properties:
+        chargeId: { type: string, format: uuid }
+        amount: { type: number, format: double, minimum: 0.01 }
+        paidAt:
+          type: string
+          format: date-time
+          description: Data/hora efetiva do pagamento (não deve estar no futuro).
+          x-validation-rules:
+            - rule: notInFuture
+              expression: paidAt <= now()
+              message: paidAt não pode estar no futuro.
+        method:
+          type: string
+          description: |
+            Método de pagamento.
+            - PIX: transferência instantânea do sistema Pix.
+            - BOLETO: pagamento via boleto bancário.
+            - CARD: pagamento por cartão.
+            - TRANSFER: transferência bancária tradicional.
+          enum: [PIX, BOLETO, CARD, TRANSFER]
+    Payment:
+      type: object
+      required: [id, chargeId, amount, paidAt, method]
+      properties:
+        id: { type: string, format: uuid }
+        chargeId: { type: string, format: uuid }
+        amount: { type: number, format: double, minimum: 0.01 }
+        paidAt: { type: string, format: date-time }
+        method:
+          type: string
+          description: Método utilizado no pagamento.
+          enum: [PIX, BOLETO, CARD, TRANSFER]
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, example: AUTH_INVALID_CREDENTIALS }
+        message: { type: string, example: Credenciais inválidas. }
