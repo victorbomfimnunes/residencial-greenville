@@ -249,7 +249,7 @@ components:
       required: [email, password]
       properties:
         email: { type: string, format: email }
-        password: { type: string, format: password }
+        password: { type: string, format: password, minLength: 8 }
     AuthToken:
       type: object
       required: [accessToken, expiresIn]
@@ -389,12 +389,16 @@ components:
           enum: [PIX, BOLETO, CARD, TRANSFER]
     Payment:
       type: object
-      required: [id, chargeId, amount, paidAt]
+      required: [id, chargeId, amount, paidAt, method]
       properties:
         id: { type: string, format: uuid }
         chargeId: { type: string, format: uuid }
         amount: { type: number, format: double, minimum: 0.01 }
         paidAt: { type: string, format: date-time }
+        method:
+          type: string
+          description: Método utilizado no pagamento.
+          enum: [PIX, BOLETO, CARD, TRANSFER]
     ErrorResponse:
       type: object
       required: [code, message]
