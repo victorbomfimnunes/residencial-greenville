@@ -18,6 +18,7 @@ paths:
     post:
       tags: [Auth]
       summary: Autentica usuário e retorna token
+      description: Endpoint sensível com proteção de limitação de tentativas por IP e usuário.
       requestBody:
         required: true
         content:
@@ -31,6 +32,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthToken'
+        '401':
+          description: Credenciais inválidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Limite de tentativas excedido
+          headers:
+            Retry-After:
+              description: Tempo em segundos para nova tentativa.
+              schema:
+                type: integer
+                minimum: 1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
   /units:
     get:
       tags: [Units]
@@ -338,7 +357,7 @@ components:
         id: { type: string, format: uuid }
         condominiumId: { type: string, format: uuid }
         unitId: { type: string, format: uuid }
-        amount: { type: number, format: double, minimum: 0 }
+        amount: { type: number, format: double, minimum: 0.01 }
         dueDate: { type: string, format: date }
         status:
           type: string
@@ -361,6 +380,12 @@ components:
         paidAt: { type: string, format: date-time }
         method:
           type: string
+          description: |
+            Método de pagamento.
+            - PIX: transferência instantânea do sistema Pix.
+            - BOLETO: pagamento via boleto bancário.
+            - CARD: pagamento por cartão.
+            - TRANSFER: transferência bancária tradicional.
           enum: [PIX, BOLETO, CARD, TRANSFER]
     Payment:
       type: object
@@ -370,3 +395,9 @@ components:
         chargeId: { type: string, format: uuid }
         amount: { type: number, format: double, minimum: 0.01 }
         paidAt: { type: string, format: date-time }
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code: { type: string, example: AUTH_INVALID_CREDENTIALS }
+        message: { type: string, example: Credenciais inválidas. }
