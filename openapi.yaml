@@ -306,6 +306,10 @@ components:
       type: object
       required: [condominiumId, residentId, resourceName, startAt, endAt]
       description: O backend deve validar que endAt é maior que startAt.
+      x-validation-rules:
+        - rule: endAtAfterStartAt
+          expression: endAt > startAt
+          message: endAt deve ser maior que startAt.
       properties:
         condominiumId: { type: string, format: uuid }
         residentId: { type: string, format: uuid }
@@ -382,6 +386,10 @@ components:
           type: string
           format: date-time
           description: Data/hora efetiva do pagamento (não deve estar no futuro).
+          x-validation-rules:
+            - rule: notInFuture
+              expression: paidAt <= now()
+              message: paidAt não pode estar no futuro.
         method:
           type: string
           description: |
