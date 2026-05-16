@@ -249,7 +249,7 @@ components:
       required: [email, password]
       properties:
         email: { type: string, format: email }
-        password: { type: string, format: password, minLength: 8 }
+        password: { type: string, format: password, minLength: 8, maxLength: 128 }
     AuthToken:
       type: object
       required: [accessToken, expiresIn]
@@ -305,6 +305,7 @@ components:
     CreateReservationRequest:
       type: object
       required: [condominiumId, residentId, resourceName, startAt, endAt]
+      description: O backend deve validar que endAt é maior que startAt.
       properties:
         condominiumId: { type: string, format: uuid }
         residentId: { type: string, format: uuid }
@@ -373,11 +374,14 @@ components:
 
     RegisterPaymentRequest:
       type: object
-      required: [chargeId, amount, paidAt]
+      required: [chargeId, amount, paidAt, method]
       properties:
         chargeId: { type: string, format: uuid }
         amount: { type: number, format: double, minimum: 0.01 }
-        paidAt: { type: string, format: date-time }
+        paidAt:
+          type: string
+          format: date-time
+          description: Data/hora efetiva do pagamento (não deve estar no futuro).
         method:
           type: string
           description: |
